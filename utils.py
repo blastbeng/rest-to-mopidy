@@ -65,22 +65,32 @@ def get_tts_google(text: str):
 def play_tts(text: str, voice: str):
   if voice is None or voice == "null" or voice == "random":
     voice = get_random_voice()
-  if len(text) > 200:
-    text = text[0:200]
-  filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice).strip().replace(" ", "_") + ".mp3"
+  text_to_save = text
+  voice_name = get_voice_name(voice).strip()
+  if len(text_to_save) > 200:
+    text_to_save = text_to_save[0:200]
+  filename=text_to_save.strip().replace(" ", "_") + "__" + voice_name.strip().replace(" ", "_") + ".mp3"
   location=MOPIDY_LIBRARY_DIR + "/" + filename
   if exists(location):
-    #TODO: CALL MOPIDY
-    return 'Playing "' + text + '" using voice "' + get_voice_name(voice) + '"'
+    play_to_mopidy(text, voice)
+    return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
   else:
     tts_out, voice = get_tts(text, voice=voice)
     if tts_out is not None:
       with open(location,'wb') as out:
         out.write(tts_out.read())
-      #TODO: CALL MOPIDY
-      return 'Playing "' + text + '" using voice "' + get_voice_name(voice) + '"'
+      play_to_mopidy(text, voice, refresh=True)
+      return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
     else:
       return None
+
+def play_to_mopidy(text: str, voice: str, refresh=False):
+  if refresh:
+    mopidy.library.refresh()
+  track = mopidy.library.search({'artist': [voice], 'track_name': [text]})
+  mopidy.tracklist.clear()
+  mopidy.tracklist.add(track)
+  #mopidy.playback.play()
 
 def get_tts(text: str, voice=None, timeout=600):
   try:
