@@ -95,7 +95,7 @@ def get_tts(text: str, voice=None, timeout=600):
       else:
         ijt = generate_ijt(fy, text.strip(), voice_to_use)
         if ijt is not None:
-          out = get_wav_fy(fy,ijt, voice_to_use, timeout=timeout)
+          out = get_wav_fy(fy,ijt, voice_to_use, text.strip(), timeout=timeout)
           if out is not None:
             audiodb.insert(text.strip(), out, voice_to_use)
             return audiodb.select_by_name_voice(text.strip(), voice_to_use), voice_to_use
@@ -160,7 +160,7 @@ def generate_ijt(fy,text:str,ttsModelToken:str):
     raise TooManyRequests("FakeYou: too many requests.")
 
 
-def get_wav_fy(fy,ijt:str, voice:str, timeout:int):
+def get_wav_fy(fy,ijt:str, voice:str, text:str, timeout:int):
   count = 0
   while True:
     handler=fy.session.get(url=fy.baseurl+f"tts/job/{ijt}")
