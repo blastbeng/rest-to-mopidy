@@ -64,21 +64,21 @@ def get_tts_google(text: str):
 
 def play_tts(text: str, voice: str):
   if voice is None or voice == "null" or voice == "random":
-    voice_to_use = get_random_voice()
+    voice = get_random_voice()
   if len(text) > 200:
     text = text[0:200]
-  filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice_to_use).strip().replace(" ", "_") + ".mp3"
+  filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice).strip().replace(" ", "_") + ".mp3"
   location=MOPIDY_LIBRARY_DIR + "/" + filename
   if exists(location):
     #TODO: CALL MOPIDY
-    return 'Playing "' + text + '" using voice "' + get_voice_name(voice_to_use) + '"'
+    return 'Playing "' + text + '" using voice "' + get_voice_name(voice) + '"'
   else:
-    tts_out, voice_to_use = get_tts(text, voice=voice_to_use)
+    tts_out, voice = get_tts(text, voice=voice)
     if tts_out is not None:
       with open(location,'wb') as out:
         out.write(tts_out.read())
       #TODO: CALL MOPIDY
-      return 'Playing "' + text + '" using voice "' + get_voice_name(voice_to_use) + '"'
+      return 'Playing "' + text + '" using voice "' + get_voice_name(voice) + '"'
     else:
       return None
 
