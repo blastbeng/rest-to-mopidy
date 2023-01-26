@@ -51,14 +51,29 @@ def get_response_str(text: str):
 
 nsaudio = api.namespace('audio', 'TTS APIs')
 
-@nsaudio.route('/speak/<string:text>/')
-@nsaudio.route('/speak/<string:text>/<string:voice>/')
-class AudioSpeakClass(Resource):
+@nsaudio.route('/generate/<string:text>/')
+@nsaudio.route('/generate/<string:text>/<string:voice>/')
+class AudioGenerateClass(Resource):
   def get (self, text: str, voice = "random"):
     try:
-      tts_out = utils.get_tts(text, voice=voice)
+      tts_out, voice_to_use = utils.get_tts(text, voice=voice)
       if tts_out is not None:
         return send_file(tts_out, attachment_filename='audio.mp3', mimetype='audio/mpeg')
+      else:
+        return make_response("TTS Generation Error!", 500)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
+
+
+@nsaudio.route('/play/<string:text>/')
+@nsaudio.route('/play/<string:text>/<string:voice>/')
+class AudioPlayClass(Resource):
+  def get (self, text: str, voice = "random"):
+    try:
+      result = utils.play_tts(text, voice)
+      if result is not None:
+        return get_response_str(result)
       else:
         return make_response("TTS Generation Error!", 500)
     except Exception as e:

@@ -11,11 +11,8 @@ MarkupSafe
 uWSGI
 gtts
 pysqlite3
-redis==4.3.4
-Flask-Caching==2.0.1
 Flask-APScheduler
 fakeyou
-sqlitedict
 Flask-Limiter
 uwsgi-tools
 pydub

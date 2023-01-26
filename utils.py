@@ -24,13 +24,13 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 from fakeyou.objects import *
 from fakeyou.exception import *
-from sqlitedict import SqliteDict
 from pydub import AudioSegment
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 FAKEYOU_USER = os.environ.get("FAKEYOU_USER")
 FAKEYOU_PASS = os.environ.get("FAKEYOU_PASS")
+MOPIDY_LIBRARY_DIR = os.environ.get("MOPIDY_LIBRARY_DIR")
 
 logging.basicConfig(
         format='%(asctime)s %(levelname)-8s %(message)s',
@@ -59,6 +59,19 @@ def get_tts_google(text: str):
     audiodb.insert(text, memoryBuff, "google")
     return audiodb.select_by_name_voice(text, "google")
 
+def play_tts(text: str, voice: str):
+  tts_out, voice_to_use = get_tts(text, voice=voice)
+  if tts_out is not None:
+    if len(text) > 200:
+      text = text[0:200]
+    filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice_to_use).strip().replace(" ", "_") + ".mp3"
+    location=MOPIDY_LIBRARY_DIR + "/" + filename
+    with open(location,'wb') as out:
+      out.write(tts_out.read())
+    return 'Playing "' + text + '" using voice "' + get_voice_name(voice_to_use) + '"'
+  else:
+    return None
+
 def get_tts(text: str, voice=None, timeout=600):
   try:
     if voice is None or voice == "null" or voice == "random":
@@ -68,36 +81,37 @@ def get_tts(text: str, voice=None, timeout=600):
     if voice_to_use != "google": 
       datafy = audiodb.select_by_name_voice(text.strip(), voice_to_use)
       if datafy is not None:
-        return datafy
+        return datafy, voice_to_use
       else:
         ijt = generate_ijt(fy, text.strip(), voice_to_use)
         if ijt is not None:
           out = get_wav_fy(fy,ijt, voice_to_use, timeout=timeout)
           if out is not None:
             audiodb.insert(text.strip(), out, voice_to_use)
-            return audiodb.select_by_name_voice(text.strip(), voice_to_use)
+            return audiodb.select_by_name_voice(text.strip(), voice_to_use), voice_to_use
           elif voice == "random" or voice == "google":
-            return get_tts_google(text.strip())
+            return get_tts_google(text.strip()), "google"
           else:
-            return None
+            return None, None
         elif voice == "random" or voice == "google":
-          return get_tts_google(text.strip())
+          return get_tts_google(text.strip()), "google"
         else:
-          return None
+          return None, None
     else:
-      return get_tts_google(text.strip())
+      return get_tts_google(text.strip()), "google"
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     logging.error("%s %s %s", exc_type, fname, exc_tb.tb_lineno, exc_info=1)
     if voice == "random":
-      return get_tts_google(text.strip())
+      return get_tts_google(text.strip()), "google"
     else:
       raise Exception(e)
 
 def get_voice_name(voice: str):
+  localvoices = get_configured_voices()
   keys = [k for k, v in localvoices.items() if v == voice]
-  return key
+  return str(keys[0])
 
 def get_random_voice():
   localvoices = get_configured_voices()
