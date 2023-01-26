@@ -1,13 +1,12 @@
 [Unit]
 Description=rest-to-mopidy service
-Requires=docker.service
-After=docker.service
+
 [Service]
-Restart=always
-User=blast
-Group=docker
+User=pi
+Group=pi
 WorkingDirectory=/opt/rest-to-mopidy
-ExecStart=./run.sh
+ExecStart=/opt/rest-to-mopidy/run.sh
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
