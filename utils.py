@@ -15,6 +15,7 @@ import wave
 import audioop
 import logging
 import audiodb
+from mopidyapi import MopidyAPI
 from uuid import uuid4
 from gtts import gTTS
 from io import BytesIO
@@ -30,6 +31,7 @@ load_dotenv(dotenv_path)
 FAKEYOU_USER = os.environ.get("FAKEYOU_USER")
 FAKEYOU_PASS = os.environ.get("FAKEYOU_PASS")
 MOPIDY_LIBRARY_DIR = os.environ.get("MOPIDY_LIBRARY_DIR")
+MOPIDY_HOST = os.environ.get("MOPIDY_HOST")
 
 logging.basicConfig(
         format='%(asctime)s %(levelname)-8s %(message)s',
@@ -40,6 +42,8 @@ log.setLevel(int(os.environ.get("LOG_LEVEL")))
 
 fy=fakeyou.FakeYou()
 fy.login(FAKEYOU_USER,FAKEYOU_PASS)
+
+mopidy = MopidyAPI(host=MOPIDY_HOST, port=6680)
 
 def get_tts_google(text: str):
   data = audiodb.select_by_name_voice(text, "google")
@@ -52,7 +56,7 @@ def get_tts_google(text: str):
     fp.seek(0)
     sound = AudioSegment.from_mp3(fp)
     memoryBuff = BytesIO()
-    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name("google")})
+    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name("google"), 'track': text})
     #awesome.export("mashup.mp3", format="mp3", tags={'artist': 'Various artists', 'album': 'Best of 2011', 'comments': 'This album is awesome!'})
     memoryBuff.seek(0)
     audiodb.insert(text, memoryBuff, "google")
@@ -179,7 +183,7 @@ def get_wav_fy(fy,ijt:str, voice:str, timeout:int):
         fp.seek(0)
         sound = AudioSegment.from_wav(fp)
         memoryBuff = BytesIO()
-        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name(voice)})
+        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name(voice), 'track': text})
         memoryBuff.seek(0)
         return memoryBuff
         #return fp
