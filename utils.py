@@ -19,8 +19,7 @@ from uuid import uuid4
 from gtts import gTTS
 from io import BytesIO
 from pathlib import Path
-from pathlib import Path
-from os.path import join, dirname
+from os.path import join, dirname, exists
 from dotenv import load_dotenv
 from fakeyou.objects import *
 from fakeyou.exception import *
@@ -60,17 +59,24 @@ def get_tts_google(text: str):
     return audiodb.select_by_name_voice(text, "google")
 
 def play_tts(text: str, voice: str):
-  tts_out, voice_to_use = get_tts(text, voice=voice)
-  if tts_out is not None:
-    if len(text) > 200:
-      text = text[0:200]
-    filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice_to_use).strip().replace(" ", "_") + ".mp3"
-    location=MOPIDY_LIBRARY_DIR + "/" + filename
-    with open(location,'wb') as out:
-      out.write(tts_out.read())
+  if voice is None or voice == "null" or voice == "random":
+    voice_to_use = get_random_voice()
+  if len(text) > 200:
+    text = text[0:200]
+  filename=text.strip().replace(" ", "_") + "__" + get_voice_name(voice_to_use).strip().replace(" ", "_") + ".mp3"
+  location=MOPIDY_LIBRARY_DIR + "/" + filename
+  if exists(location):
+    #TODO: CALL MOPIDY
     return 'Playing "' + text + '" using voice "' + get_voice_name(voice_to_use) + '"'
   else:
-    return None
+    tts_out, voice_to_use = get_tts(text, voice=voice_to_use)
+    if tts_out is not None:
+      with open(location,'wb') as out:
+        out.write(tts_out.read())
+      #TODO: CALL MOPIDY
+      return 'Playing "' + text + '" using voice "' + get_voice_name(voice_to_use) + '"'
+    else:
+      return None
 
 def get_tts(text: str, voice=None, timeout=600):
   try:
