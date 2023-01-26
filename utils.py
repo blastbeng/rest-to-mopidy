@@ -29,7 +29,6 @@ from pydub import AudioSegment
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
-TMP_DIR = os.environ.get("TMP_DIR")
 FAKEYOU_USER = os.environ.get("FAKEYOU_USER")
 FAKEYOU_PASS = os.environ.get("FAKEYOU_PASS")
 
@@ -106,33 +105,12 @@ def get_random_voice():
   return token
 
 def get_configured_voices():
-  #fy.login(FAKEYOU_USER,FAKEYOU_PASS)
-  db = SqliteDict(TMP_DIR+"/fakeyou_voices.sqlite")
   localvoices = {}
-  if len(db) > 0:
-    for key, item in db.items():
-      localvoices[key] = item
-    return localvoices
-  else:
-    localvoices["Duke Nukem"]                   = "TM:cq3p31567cbh"
-    localvoices["Gerry Scotti"]                 = "TM:5ggf3m5w2mhq"
-    localvoices["google"]                       = "google"
-    localvoices["Homer Simpson"]                = "TM:dq50arje7sq4"
-    localvoices["Maccio Capatonda"]             = "TM:ahx65p1gk6b4"
-    localvoices["Paolo Bonolis"]                = "TM:zdag8n18q9ct"
-    localvoices["Peter Griffin"]                = "TM:s493mhsbek15" 
-    localvoices["Silvio Berlusconi"]            = "TM:22e5sxvt2dvk"
-    db["Duke Nukem"]                            = "TM:cq3p31567cbh"
-    db["Gerry Scotti"]                          = "TM:5ggf3m5w2mhq"
-    db["google"]                                = "google"
-    db["Homer Simpson"]                         = "TM:dq50arje7sq4"
-    db["Maccio Capatonda"]                      = "TM:ahx65p1gk6b4"
-    db["Paolo Bonolis"]                         = "TM:zdag8n18q9ct" 
-    db["Peter Griffin"]                         = "TM:s493mhsbek15" 
-    db["Silvio Berlusconi"]                     = "TM:22e5sxvt2dvk"
-    db.commit()
-    return localvoices
-  db.close()
+  with open('voices.json') as filejson:
+    loaded = json.load(filejson)
+    for iterator in loaded:
+      localvoices[iterator] = loaded[iterator]
+  return localvoices
 
 def list_fakeyou_voices(lang:str):
   voices=fy.list_voices(size=0)
