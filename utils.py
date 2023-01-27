@@ -77,19 +77,14 @@ def play_tts(text: str, voice: str):
     filename=text_to_save.strip().replace(" ", "_") + "__" + voice_name.strip().replace(" ", "_") + ".mp3"
     location=MOPIDY_LIBRARY_DIR + "/" + filename
     if exists(location):
-      if play_to_mopidy(text, voice):
-        return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
-      else:
-        return None
+      play_to_mopidy(text, voice)
+      return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
     else:
       tts_out, voice = get_tts(text, voice=voice)
       if tts_out is not None:
         with open(location,'wb') as out:
           out.write(tts_out.read())
-        if play_to_mopidy(text, voice, refresh=True):
-          return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
-        else:
-          return None
+        return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
       else:
         return None
   else:
@@ -104,9 +99,8 @@ def play_to_mopidy(text: str, voice: str, refresh=False):
     mopidy.tracklist.clear()
     mopidy.tracklist.add([searchresult[0][1][0]])
     mopidy.playback.play()
-    return True
   else:
-    return False
+    raise Exception("Error searching for audio!")
 
 def get_tts(text: str, voice=None, timeout=600):
   try:
