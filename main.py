@@ -65,12 +65,21 @@ class AudioGenerateClass(Resource):
       g.request_error = str(e)
       return make_response(g.get('request_error'), 500)
 
+parserplay = reqparse.RequestParser()
+parserplay.add_argument("text", type=str)
+parserplay.add_argument("voice", type=str)
 
-@nsaudio.route('/play/<string:text>/')
-@nsaudio.route('/play/<string:text>/<string:voice>/')
+@nsaudio.route('/play')
 class AudioPlayClass(Resource):
-  def get (self, text: str, voice = "random"):
+  @api.expect(parserplay)
+  def get (self):
     try:
+      text = request.args.get("text")
+      if text is None:
+        return get_response_str("text is mandatory.")
+      voice = request.args.get("voice")
+      if voice is not None and utils.get_voice_name(voice) is None:
+        return get_response_str("voice not found.")
       result = utils.play_tts(text, voice)
       if result is not None:
         return get_response_str(result)

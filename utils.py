@@ -141,7 +141,10 @@ def get_tts(text: str, voice=None, timeout=600):
 def get_voice_name(voice: str):
   localvoices = get_configured_voices()
   keys = [k for k, v in localvoices.items() if v == voice]
-  return str(keys[0])
+  if len(keys) == 0:
+    return None
+  else:
+    return str(keys[0])
 
 def get_random_voice():
   localvoices = get_configured_voices()
