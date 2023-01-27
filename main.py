@@ -67,7 +67,7 @@ class AudioGenerateClass(Resource):
 
 @nsaudio.route('/play')
 class AudioPlayClass(Resource):
-  def get (self):
+  def post (self):
     try:
       text = request.json.get("data").get("text")
       if text is None:
