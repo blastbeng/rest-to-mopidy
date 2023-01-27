@@ -96,12 +96,13 @@ def play_tts(text: str, voice: str):
     return 'Already playing'
 
 def play_to_mopidy(text: str, voice: str, refresh=False):
+  voicename = get_voice_name(voice)
   if refresh:
     mopidy.library.refresh()
-  searchresult = mopidy.library.search({'artist': [voice], 'track_name': [text]})
-  if len(searchresult) > 0:
+  searchresult = mopidy.library.search({'artist': [voicename], 'track_name': [text]})
+  if len(searchresult) > 0 and len(searchresult[0]) > 1:
     mopidy.tracklist.clear()
-    mopidy.tracklist.add(uris=[searchresult[0].uri])
+    mopidy.tracklist.add([searchresult[0][1][0]])
     mopidy.playback.play()
     return True
   else:
