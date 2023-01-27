@@ -102,7 +102,7 @@ def play_to_mopidy(text: str, voice: str):
   else:
     raise Exception("Error searching for audio!")
 
-def get_tts(text: str, voice=None, timeout=600):
+def get_tts(text: str, voice=None, timeout=60):
   try:
     if voice is None or voice == "null" or voice == "random":
       voice_to_use = get_random_voice()
