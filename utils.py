@@ -84,7 +84,7 @@ def play_tts(text: str, voice: str):
       if tts_out is not None:
         with open(location,'wb') as out:
           out.write(tts_out.read())
-          os.system('sudo mopidyctl local')
+          os.system('sudo mopidyctl local scan')
           play_to_mopidy(text, voice)
         return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
       else:
