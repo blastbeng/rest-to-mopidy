@@ -7,6 +7,7 @@ import requests
 import sys
 import os
 import io
+import subprocess
 from datetime import datetime
 import string
 import fakeyou
@@ -84,16 +85,16 @@ def play_tts(text: str, voice: str):
       if tts_out is not None:
         with open(location,'wb') as out:
           out.write(tts_out.read())
+          subprocess.Popen('sudo mopidyctl local scan', shell=True)
+          play_to_mopidy(text, voice)
         return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
       else:
         return None
   else:
     return 'Already playing'
 
-def play_to_mopidy(text: str, voice: str, refresh=False):
+def play_to_mopidy(text: str, voice: str):
   voicename = get_voice_name(voice)
-  if refresh:
-    mopidy.library.refresh()
   searchresult = mopidy.library.search({'artist': [voicename], 'track_name': [text]})
   if len(searchresult) > 0 and len(searchresult[0]) > 1:
     mopidy.tracklist.clear()
