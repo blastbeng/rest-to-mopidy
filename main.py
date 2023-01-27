@@ -51,28 +51,32 @@ def get_response_str(text: str):
 
 nsaudio = api.namespace('audio', 'TTS APIs')
 
-@nsaudio.route('/generate/<string:text>/')
-@nsaudio.route('/generate/<string:text>/<string:voice>/')
-class AudioGenerateClass(Resource):
-  def get (self, text: str, voice = "random"):
-    try:
-      tts_out, voice_to_use = utils.get_tts(text, voice=voice)
-      if tts_out is not None:
-        return send_file(tts_out, attachment_filename='audio.mp3', mimetype='audio/mpeg')
-      else:
-        return make_response("TTS Generation Error!", 500)
-    except Exception as e:
-      g.request_error = str(e)
-      return make_response(g.get('request_error'), 500)
-
 @nsaudio.route('/play')
-class AudioPlayClass(Resource):
+class AudioPlayPostClass(Resource):
   def post (self):
     try:
       text = request.json.get("data").get("text")
       if text is None:
         return get_response_str("text is mandatory.")
       voice = request.json.get("data").get("voice")
+      if voice is not None and utils.get_voice_name(voice) is None:
+        return get_response_str("voice not found.")
+      result = utils.play_tts(text, voice)
+      if result is not None:
+        return get_response_str(result)
+      else:
+        return make_response("TTS Generation Error!", 500)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
+      
+@nsaudio.route('/play/<string:text>/')
+@nsaudio.route('/play/<string:text>/<string:voice>/')
+class AudioPlayGetClass(Resource):
+  def get (self, text: str, voice = None):
+    try:
+      if text is None:
+        return get_response_str("text is mandatory.")
       if voice is not None and utils.get_voice_name(voice) is None:
         return get_response_str("voice not found.")
       result = utils.play_tts(text, voice)
