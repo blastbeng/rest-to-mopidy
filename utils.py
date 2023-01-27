@@ -64,7 +64,7 @@ def get_tts_google(text: str):
     return audiodb.select_by_name_voice(text, "google")
 
 def get_cover_by_name(voicename: str):
-  return "./images/" + voicename.strip().replace(" ", "_") + ".png"
+  return os.getcwd() + "/images/" + voicename.strip().replace(" ", "_") + ".png"
 
 def play_tts(text: str, voice: str):
   if mopidy.playback.get_state().lower() == "stopped" or mopidy.playback.get_state().lower() == "paused":
