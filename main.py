@@ -107,6 +107,19 @@ class FakeYouListVoices(Resource):
 class Healthcheck(Resource):
   def get (self):
     return "Ok!"
+
+@nsutils.route('/reset')
+class Reset(Resource):
+  def get (self):
+    try:
+      result = utils.reset()
+      if result is not None:
+        return get_response_str(result)
+      else:
+        return make_response("Reset Error!", 500)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
   
 @scheduler.task('interval', id='login_fakeyou', hours=11, misfire_grace_time=900)
 def login_fakeyou():

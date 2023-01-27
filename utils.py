@@ -16,6 +16,7 @@ import audioop
 import logging
 import audiodb
 from mopidyapi import MopidyAPI
+from urllib.parse import urlparse
 from uuid import uuid4
 from gtts import gTTS
 from io import BytesIO
@@ -56,41 +57,55 @@ def get_tts_google(text: str):
     fp.seek(0)
     sound = AudioSegment.from_mp3(fp)
     memoryBuff = BytesIO()
-    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name("google"), 'track': text})
-    #awesome.export("mashup.mp3", format="mp3", tags={'artist': 'Various artists', 'album': 'Best of 2011', 'comments': 'This album is awesome!'})
+    voicename = get_voice_name("google")
+    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'track': text, 'cover': get_cover_by_name(voicename)})
     memoryBuff.seek(0)
     audiodb.insert(text, memoryBuff, "google")
     return audiodb.select_by_name_voice(text, "google")
 
+def get_cover_by_name(voicename: str):
+  return "./images/" + voicename.strip().replace(" ", "_") + ".png"
+
 def play_tts(text: str, voice: str):
-  if voice is None or voice == "null" or voice == "random":
-    voice = get_random_voice()
-  text_to_save = text
-  voice_name = get_voice_name(voice).strip()
-  if len(text_to_save) > 200:
-    text_to_save = text_to_save[0:200]
-  filename=text_to_save.strip().replace(" ", "_") + "__" + voice_name.strip().replace(" ", "_") + ".mp3"
-  location=MOPIDY_LIBRARY_DIR + "/" + filename
-  if exists(location):
-    play_to_mopidy(text, voice)
-    return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
-  else:
-    tts_out, voice = get_tts(text, voice=voice)
-    if tts_out is not None:
-      with open(location,'wb') as out:
-        out.write(tts_out.read())
-      play_to_mopidy(text, voice, refresh=True)
-      return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
+  if mopidy.playback.get_state().lower() == "stopped" or mopidy.playback.get_state().lower() == "paused":
+    if voice is None or voice == "null" or voice == "random":
+      voice = get_random_voice()
+    text_to_save = text
+    voice_name = get_voice_name(voice).strip()
+    if len(text_to_save) > 200:
+      text_to_save = text_to_save[0:200]
+    filename=text_to_save.strip().replace(" ", "_") + "__" + voice_name.strip().replace(" ", "_") + ".mp3"
+    location=MOPIDY_LIBRARY_DIR + "/" + filename
+    if exists(location):
+      if play_to_mopidy(text, voice):
+        return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
+      else:
+        return None
     else:
-      return None
+      tts_out, voice = get_tts(text, voice=voice)
+      if tts_out is not None:
+        with open(location,'wb') as out:
+          out.write(tts_out.read())
+        if play_to_mopidy(text, voice, refresh=True):
+          return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
+        else:
+          return None
+      else:
+        return None
+  else:
+    return 'Already playing'
 
 def play_to_mopidy(text: str, voice: str, refresh=False):
   if refresh:
     mopidy.library.refresh()
-  track = mopidy.library.search({'artist': [voice], 'track_name': [text]})
-  mopidy.tracklist.clear()
-  mopidy.tracklist.add(track)
-  #mopidy.playback.play()
+  searchresult = mopidy.library.search({'artist': [voice], 'track_name': [text]})
+  if len(searchresult) > 0:
+    mopidy.tracklist.clear()
+    mopidy.tracklist.add(uris=[searchresult[0].uri])
+    #mopidy.playback.play()
+    return True
+  else:
+    return False
 
 def get_tts(text: str, voice=None, timeout=600):
   try:
@@ -193,7 +208,8 @@ def get_wav_fy(fy,ijt:str, voice:str, text:str, timeout:int):
         fp.seek(0)
         sound = AudioSegment.from_wav(fp)
         memoryBuff = BytesIO()
-        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': get_voice_name(voice), 'track': text})
+        voicename = get_voice_name(voice)
+        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'track': text, 'cover': get_cover_by_name(voicename)})
         memoryBuff.seek(0)
         return memoryBuff
         #return fp
@@ -204,3 +220,15 @@ def get_wav_fy(fy,ijt:str, voice:str, text:str, timeout:int):
 
 def login_fakeyou():
   fy.login(FAKEYOU_USER,FAKEYOU_PASS)
+
+def reset():
+  folders = ["./config" , MOPIDY_LIBRARY_DIR]
+  for folder in folders:
+    for filename in os.listdir(folder):
+      file_path = os.path.join(folder, filename)
+      if os.path.isfile(file_path) or os.path.islink(file_path):
+        os.unlink(file_path)
+      elif os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+  audiodb.create_empty_tables()
+  return "Reset Ok!"
