@@ -102,7 +102,7 @@ def play_to_mopidy(text: str, voice: str, refresh=False):
   if len(searchresult) > 0:
     mopidy.tracklist.clear()
     mopidy.tracklist.add(uris=[searchresult[0].uri])
-    #mopidy.playback.play()
+    mopidy.playback.play()
     return True
   else:
     return False
