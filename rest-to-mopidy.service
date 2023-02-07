@@ -1,5 +1,7 @@
 [Unit]
 Description=rest-to-mopidy service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 User=pi
