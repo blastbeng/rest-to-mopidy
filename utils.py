@@ -70,11 +70,11 @@ def play_tts(text: str, voice: str):
   if mopidy.playback.get_state().lower() == "stopped" or mopidy.playback.get_state().lower() == "paused":
     if voice is None or voice == "null" or voice == "random":
       voice = get_random_voice()
-    text_to_save = text
+    text_to_save = text.strip().casefold()
     voice_name = get_voice_name(voice).strip()
     if len(text_to_save) > 200:
       text_to_save = text_to_save[0:200]
-    filename=text_to_save.strip().replace(" ", "_") + "__" + voice_name.strip().replace(" ", "_") + ".mp3"
+    filename=text_to_save.replace(" ", "_") + "__" + voice_name.replace(" ", "_") + ".mp3"
     location=MOPIDY_LIBRARY_DIR + "/" + filename
     if exists(location):
       play_to_mopidy(text, voice)
@@ -84,7 +84,7 @@ def play_tts(text: str, voice: str):
       if tts_out is not None:
         with open(location,'wb') as out:
           out.write(tts_out.read())
-          os.system('sudo mopidyctl local scan')
+          #os.system('sudo mopidyctl local scan')
           play_to_mopidy(text, voice)
         return 'Playing "' + text_to_save + '" using voice "' + voice_name + '"'
       else:
@@ -95,46 +95,52 @@ def play_tts(text: str, voice: str):
 def play_to_mopidy(text: str, voice: str):
   voicename = get_voice_name(voice)
   searchresult = mopidy.library.search({'artist': [voicename], 'track_name': [text]})
+  found = False
   if len(searchresult) > 0 and len(searchresult[0]) > 1:
-    mopidy.tracklist.clear()
-    mopidy.tracklist.add([searchresult[0][1][0]])
-    mopidy.playback.play()
-  else:
+    for saudio in searchresult[0][1]:
+      if text == saudio.name:
+        mopidy.tracklist.clear()
+        mopidy.tracklist.add([searchresult[0][1][0]])
+        mopidy.playback.play()
+        found = True
+        break
+  if not found:
     raise Exception("Error searching for audio!")
 
 def get_tts(text: str, voice=None, timeout=60):
   try:
+    text = text.strip().casefold()
     if voice is None or voice == "null" or voice == "random":
       voice_to_use = get_random_voice()
     else:
       voice_to_use = voice
     if voice_to_use != "google": 
-      datafy = audiodb.select_by_name_voice(text.strip(), voice_to_use)
+      datafy = audiodb.select_by_name_voice(text, voice_to_use)
       if datafy is not None:
         return datafy, voice_to_use
       else:
-        ijt = generate_ijt(fy, text.strip(), voice_to_use)
+        ijt = generate_ijt(fy, text, voice_to_use)
         if ijt is not None:
-          out = get_wav_fy(fy,ijt, voice_to_use, text.strip(), timeout=timeout)
+          out = get_wav_fy(fy,ijt, voice_to_use, text, timeout=timeout)
           if out is not None:
-            audiodb.insert(text.strip(), out, voice_to_use)
-            return audiodb.select_by_name_voice(text.strip(), voice_to_use), voice_to_use
+            audiodb.insert(text, out, voice_to_use)
+            return audiodb.select_by_name_voice(text, voice_to_use), voice_to_use
           elif voice == "random" or voice == "google":
-            return get_tts_google(text.strip()), "google"
+            return get_tts_google(text), "google"
           else:
             return None, None
         elif voice == "random" or voice == "google":
-          return get_tts_google(text.strip()), "google"
+          return get_tts_google(text), "google"
         else:
           return None, None
     else:
-      return get_tts_google(text.strip()), "google"
+      return get_tts_google(text), "google"
   except Exception as e:
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     logging.error("%s %s %s", exc_type, fname, exc_tb.tb_lineno, exc_info=1)
     if voice == "random":
-      return get_tts_google(text.strip()), "google"
+      return get_tts_google(text), "google"
     else:
       raise Exception(e)
 
