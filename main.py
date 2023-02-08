@@ -9,6 +9,7 @@ import random
 import sys
 import shutil
 import subprocess
+from translate import Translator
 from datetime import datetime
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -34,6 +35,8 @@ class Config:
     SCHEDULER_API_ENABLED = True
 
 scheduler = APScheduler()
+translator = Translator(from_lang='en', to_lang="it")
+
 
 limiter = Limiter(
     key_func=get_remote_address,
@@ -70,6 +73,38 @@ class AudioPlayPostClass(Resource):
     except Exception as e:
       g.request_error = str(e)
       return make_response(g.get('request_error'), 500)
+
+@nsaudio.route('/statechange/play')
+class AudioPlayPostClass(Resource):
+  def post (self):
+    try:
+      entity = request.json.get("data").get("entity")
+      if entity is None:
+        return get_response_str("entity is mandatory.")
+
+      from_state = request.json.get("data").get("from_state")
+      if from_state is None:
+        return get_response_str("from_state is mandatory.")
+
+      to_state = request.json.get("data").get("to_state")
+      if to_state is None:
+        return get_response_str("to_state is mandatory.")
+
+      eng_text = "has changed state from " + from_state + " to " + to_state
+
+      text = entity + "ha cambiato stato da " + translator.translate(eng_text)
+
+      voice = request.json.get("data").get("voice")
+      if voice is not None and utils.get_voice_name(voice) is None:
+        return get_response_str("voice not found.")
+      result = utils.play_tts(text, voice)
+      if result is not None:
+        return get_response_str(result)
+      else:
+        return make_response("TTS Generation Error!", 500)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
       
 @nsaudio.route('/play/<string:text>/')
 @nsaudio.route('/play/<string:text>/<string:voice>/')
@@ -80,6 +115,7 @@ class AudioPlayGetClass(Resource):
         return get_response_str("text is mandatory.")
       if voice is not None and utils.get_voice_name(voice) is None:
         return get_response_str("voice not found.")
+
       result = utils.play_tts(text, voice)
       if result is not None:
         return get_response_str(result)
