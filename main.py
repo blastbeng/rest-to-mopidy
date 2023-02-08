@@ -92,7 +92,7 @@ class AudioPlayPostClass(Resource):
 
       eng_text = "has changed state from " + from_state + " to " + to_state
 
-      text = entity + "ha cambiato stato da " + translator.translate(eng_text)
+      text = entity + " " + translator.translate(eng_text)
 
       voice = request.json.get("data").get("voice")
       if voice is not None and utils.get_voice_name(voice) is None:
