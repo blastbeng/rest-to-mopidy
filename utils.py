@@ -58,7 +58,7 @@ def get_tts_google(text: str):
     sound = AudioSegment.from_mp3(fp)
     memoryBuff = BytesIO()
     voicename = get_voice_name("google")
-    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'title': text}, cover=get_cover_by_name(voicename))
+    sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'composer': voicename, 'albumartist': voicename, 'album': voicename, 'title': text, 'podcast': '1', 'language': 'Italian'}, cover=get_cover_by_name(voicename))
     memoryBuff.seek(0)
     audiodb.insert(text, memoryBuff, "google")
     return audiodb.select_by_name_voice(text, "google")
@@ -212,7 +212,7 @@ def get_wav_fy(fy,ijt:str, voice:str, text:str, timeout:int):
         sound = AudioSegment.from_wav(fp)
         memoryBuff = BytesIO()
         voicename = get_voice_name(voice)
-        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'title': text}, cover=get_cover_by_name(voicename))
+        sound.export(memoryBuff, format='mp3', bitrate="256", tags={'artist': voicename, 'composer': voicename, 'albumartist': voicename, 'album': voicename, 'title': text, 'podcast': '1', 'language': 'Italian'}, cover=get_cover_by_name(voicename))
         memoryBuff.seek(0)
         return memoryBuff
         #return fp
