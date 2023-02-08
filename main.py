@@ -9,7 +9,6 @@ import random
 import sys
 import shutil
 import subprocess
-from translate import Translator
 from datetime import datetime
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -35,7 +34,6 @@ class Config:
     SCHEDULER_API_ENABLED = True
 
 scheduler = APScheduler()
-translator = Translator(from_lang='en', to_lang="it")
 
 
 limiter = Limiter(
@@ -90,9 +88,7 @@ class AudioPlayPostClass(Resource):
       if to_state is None:
         return get_response_str("to_state is mandatory.")
 
-      eng_text = "has changed state from " + from_state + " to " + to_state
-
-      text = entity + " " + translator.translate(eng_text)
+      text = entity + " ha cambiato stato da " + from_state + " to " + to_state
 
       voice = request.json.get("data").get("voice")
       if voice is not None and utils.get_voice_name(voice) is None:

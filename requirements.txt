@@ -18,4 +18,3 @@ uwsgi-tools
 pydub
 tqdm
 mopidyapi
-translate
