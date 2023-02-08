@@ -8,7 +8,7 @@ import threading
 import random
 import sys
 import shutil
-import asyncio
+import subprocess
 from datetime import datetime
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -116,6 +116,19 @@ class FakeYouListVoices(Resource):
 class Healthcheck(Resource):
   def get (self):
     return "Ok!"
+
+@nsutils.route('/scan')
+class Scan(Resource):
+  def get (self):
+    try:
+      batcmd="sudo mopidyctl local scan"
+      result = subprocess.check_output(batcmd, shell=True)
+      get_response_str(result)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
+
+
 
 @nsutils.route('/reset')
 class Reset(Resource):
