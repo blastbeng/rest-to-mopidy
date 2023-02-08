@@ -121,9 +121,9 @@ class Healthcheck(Resource):
 class Scan(Resource):
   def get (self):
     try:
-      batcmd="sudo mopidyctl local scan"
-      result = subprocess.check_output(batcmd, shell=True)
-      get_response_str(result)
+      cmd = "sudo mopidyctl local scan"
+      os.system(cmd)
+      get_response_str("Executing: " + cmd)
     except Exception as e:
       g.request_error = str(e)
       return make_response(g.get('request_error'), 500)
