@@ -88,7 +88,7 @@ class AudioPlayPostClass(Resource):
       if to_state is None:
         return get_response_str("to_state is mandatory.")
 
-      text = entity + " ha cambiato stato da " + from_state + " a " + to_state
+      text = entity + " " + to_state
 
       voice = request.json.get("data").get("voice")
       if voice is not None and utils.get_voice_name(voice) is None:
