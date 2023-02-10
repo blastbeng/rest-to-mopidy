@@ -15,6 +15,7 @@ import wave
 import audioop
 import logging
 import audiodb
+import glob
 from mopidyapi import MopidyAPI
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -235,3 +236,11 @@ def reset():
         shutil.rmtree(file_path)
   audiodb.create_empty_tables()
   return "Reset Ok!"
+
+def delete_by_name(text:str):
+  for filename in glob.glob(MOPIDY_LIBRARY_DIR + "/*" + text + "*"):
+    os.remove(filename) 
+  for filename in glob.glob(MOPIDY_LIBRARY_DIR + "/" + text + "*"):
+    os.remove(filename) 
+  for filename in glob.glob(MOPIDY_LIBRARY_DIR + "/*" + text):
+    os.remove(filename) 

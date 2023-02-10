@@ -130,7 +130,7 @@ def delete_by_name(name: str):
     sqliteConnection = sqlite3.connect(dbfile)
     cursor = sqliteConnection.cursor()
 
-    sqlite_delete_query = "DELETE FROM Audio WHERE chatid = '" + chatid + "' and (name like '" + name + "%' OR name like '%" + name + "' OR name LIKE '%" + name + "%' OR name = '" + name + "') COLLATE NOCASE"
+    sqlite_delete_query = "DELETE FROM Audio WHERE (name like '" + name + "%' OR name like '%" + name + "' OR name LIKE '%" + name + "%' OR name = '" + name + "') COLLATE NOCASE"
 
     data_tuple = ()
 

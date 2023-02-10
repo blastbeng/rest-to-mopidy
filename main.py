@@ -126,7 +126,13 @@ nsdatabase = api.namespace('database', 'DATABASE APIs')
 @nsdatabase.route('/delete/bytext/<string:text>/')
 class UtilsDeleteByText(Resource):
   def get (self, text: str):
-    return get_response_str(audiodb.delete_by_name(text))
+    try:
+      audiodb.delete_by_name(text)
+      utils.delete_by_name(text)
+      return get_response_str("Deleting audios containing: " + text)
+    except Exception as e:
+      g.request_error = str(e)
+      return make_response(g.get('request_error'), 500)
 
 nsutils = api.namespace('utils', 'UTILS APIs')
 
