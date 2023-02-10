@@ -153,7 +153,7 @@ class FakeYouListVoices(Resource):
 @nsutils.route('/healthcheck')
 class Healthcheck(Resource):
   def get (self):
-    return "Ok!"
+    return get_response_str("OK")
 
 @nsutils.route('/scan')
 class Scan(Resource):
